@@ -1,5 +1,6 @@
 package edu.uta.datauploadsvc.service.impl;
 
+import edu.uta.datauploadsvc.domain.UploadedFile;
 import edu.uta.datauploadsvc.service.FileService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Service
 public class FileServiceImpl implements FileService {
@@ -37,7 +41,7 @@ public class FileServiceImpl implements FileService {
     @Override
     public boolean deleteFile(String name) {
         File file = Paths.get("")
-                .resolve(new StringBuilder(dataDir).append(name).toString())
+                .resolve(dataDir + name)
                 .toFile();
         log.info("deleting {}", file.getAbsolutePath());
         return file.delete();
@@ -46,8 +50,10 @@ public class FileServiceImpl implements FileService {
     @Override
     public File downloadFile(String name) {
         File file = Paths.get("")
-                .resolve(new StringBuilder(dataDir).append(name).toString())
+                .resolve(dataDir + name)
                 .toFile();
+        // update time stamps for sync
+        file.setLastModified(System.currentTimeMillis());
         log.info("downloading {}", file.getAbsolutePath());
         return file;
     }
@@ -56,14 +62,25 @@ public class FileServiceImpl implements FileService {
     public boolean renameFile(String oldName, String newName) {
 
         File oldFile = Paths.get("")
-                .resolve(new StringBuilder(dataDir).append(oldName).toString())
+                .resolve(dataDir + oldName)
                 .toFile();
 
         File newFile = Paths.get("")
-                .resolve(new StringBuilder(dataDir).append(newName).toString())
+                .resolve(dataDir + newName)
                 .toFile();
 
         log.info("renaming {} to {}", oldFile.getAbsolutePath(), newFile.getAbsolutePath());
         return oldFile.renameTo(newFile);
+    }
+
+    @Override
+    public List<UploadedFile> getFiles() {
+        File serverStore = Paths.get("").resolve(dataDir).toFile();
+        List<File> rawFiles = Arrays.asList(serverStore.listFiles());
+        List<UploadedFile> files = new ArrayList<>();
+        rawFiles.forEach(f -> {
+            files.add(new UploadedFile(f.getName(), f.lastModified()));
+        });
+        return files;
     }
 }

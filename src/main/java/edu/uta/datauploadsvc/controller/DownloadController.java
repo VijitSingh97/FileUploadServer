@@ -9,6 +9,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.File;
@@ -16,13 +17,11 @@ import java.io.File;
 @RestController
 public class DownloadController {
 
-    Logger log = LoggerFactory.getLogger(DownloadController.class);
-
     @Autowired
     FileService fileService;
 
     @GetMapping("/download")
-    public ResponseEntity download(@RequestBody String name) {
+    public ResponseEntity download(@RequestParam String name) {
         File file = fileService.downloadFile(name);
         Resource fileSystemResource = new FileSystemResource(file);
         return ResponseEntity.ok()
