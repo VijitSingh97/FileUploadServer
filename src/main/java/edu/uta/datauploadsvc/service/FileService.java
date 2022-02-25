@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface FileService {
-    public void saveFile(MultipartFile file) throws IOException;
+    public void saveFile(MultipartFile file) throws Exception;
     public boolean deleteFile(String name);
     public File downloadFile(String name);
     public boolean renameFile(String oldName, String newName);

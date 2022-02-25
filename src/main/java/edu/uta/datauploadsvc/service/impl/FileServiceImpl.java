@@ -28,20 +28,25 @@ public class FileServiceImpl implements FileService {
     private String dataDir;
 
     @Override
-    public void saveFile(MultipartFile file) throws IOException {
-        Path uploadPath = Paths.get(dataDir);
+    public void saveFile(MultipartFile file) throws Exception {
+        Path uploadPath = Paths.get(getDataDir());
         if (!Files.exists(uploadPath)) {
             Files.createDirectories(uploadPath);
         }
+        String fileName = file.getOriginalFilename();
+        if(fileName.isEmpty()){
+            throw new Exception("no file name");
+        }
+
         Files.copy(file.getInputStream(),
-                uploadPath.resolve(StringUtils.cleanPath(file.getOriginalFilename())),
+                uploadPath.resolve(StringUtils.cleanPath(fileName)),
                 StandardCopyOption.REPLACE_EXISTING);
     }
 
     @Override
     public boolean deleteFile(String name) {
         File file = Paths.get("")
-                .resolve(dataDir + name)
+                .resolve(getDataDir() + name)
                 .toFile();
         log.info("deleting {}", file.getAbsolutePath());
         return file.delete();
@@ -50,10 +55,12 @@ public class FileServiceImpl implements FileService {
     @Override
     public File downloadFile(String name) {
         File file = Paths.get("")
-                .resolve(dataDir + name)
+                .resolve(getDataDir() + name)
                 .toFile();
         // update time stamps for sync
-        file.setLastModified(System.currentTimeMillis());
+        if (!file.setLastModified(System.currentTimeMillis())) {
+            return null;
+        }
         log.info("downloading {}", file.getAbsolutePath());
         return file;
     }
@@ -62,11 +69,11 @@ public class FileServiceImpl implements FileService {
     public boolean renameFile(String oldName, String newName) {
 
         File oldFile = Paths.get("")
-                .resolve(dataDir + oldName)
+                .resolve(getDataDir() + oldName)
                 .toFile();
 
         File newFile = Paths.get("")
-                .resolve(dataDir + newName)
+                .resolve(getDataDir() + newName)
                 .toFile();
 
         log.info("renaming {} to {}", oldFile.getAbsolutePath(), newFile.getAbsolutePath());
@@ -75,12 +82,19 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public List<UploadedFile> getFiles() {
-        File serverStore = Paths.get("").resolve(dataDir).toFile();
-        List<File> rawFiles = Arrays.asList(serverStore.listFiles());
+        File serverStore = Paths.get("").resolve(getDataDir()).toFile();
+        File[] filesArr = serverStore.listFiles();
+        if (filesArr == null || filesArr.length < 1) {
+            return null;
+        }
+        List<File> filesArray = Arrays.asList(filesArr);
         List<UploadedFile> files = new ArrayList<>();
-        rawFiles.forEach(f -> {
-            files.add(new UploadedFile(f.getName(), f.lastModified()));
-        });
+        filesArray.forEach(f -> files.add(new UploadedFile(f.getName(), f.lastModified())));
         return files;
+    }
+
+    public String getDataDir() {
+        new File(dataDir).mkdirs();
+        return dataDir;
     }
 }
