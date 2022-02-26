@@ -14,3 +14,6 @@ Server supports the follow operations:
 
 ## Compiling and Running the code
 `./gradlew clean bootRun`
+
+## Adding files
+copy files to `server_store/`

@@ -2,4 +2,4 @@ server:
   port : 8080
 
 file-server:
-  data-dir: "server-store/"
+  data-dir: "server_store/"
